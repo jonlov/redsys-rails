@@ -10,7 +10,7 @@ module Redsys
       json_params = JSON.parse(Base64.urlsafe_decode64(params[:Ds_MerchantParameters]))
 #     TODO: Can't make this call work nor in ruby 1.8.7 neither in ruby 2.3.0, so I create an instance of the TPV class just for checking the signature
 #      if Redsys::Tpv.response_signature(params[:Ds_MerchantParameters]) == params[:Ds_Signature]
-      @tpv = Redsys::Tpv.new(json_params["Ds_Amount"], json_params["Ds_Order"], json_params["Ds_ConsumerLanguage"],'','','')
+      @tpv = Redsys::Tpv.new(json_params["Ds_Amount"], json_params["Ds_Order"], json_params["Ds_ConsumerLanguage"], '', '', '')
 
       if @tpv.response_signature(params[:Ds_MerchantParameters]) == params[:Ds_Signature]
         # Enter only if the signature from the gateway is correct

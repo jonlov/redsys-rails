@@ -5,8 +5,8 @@ require 'rails-i18n'
 
 module Redsys
   class Tpv
-    attr_accessor :amount, :language, :order, :currency, :merchant_code, :terminal,
-                  :transaction_type, :merchant_url, :url_ok, :url_ko, :sha1, :signature
+    attr_accessor :amount, :language, :order, :merchant_identifier, :currency, :merchant_code, :terminal,
+                  :transaction_type, :merchant_url, :merchant_data, :url_ok, :url_ko, :sha1, :signature
 
     def self.tpv_url
       Rails.configuration.redsys_rails[:url]
@@ -16,15 +16,16 @@ module Redsys
       Rails.configuration.redsys_rails[:signature_version]
     end
 
-    def initialize(amount, order, language, merchant_url = nil, url_ok = nil, url_ko = nil, merchant_name = nil, product_description = nil)
+    def initialize(amount, order, language, merchant_url = nil, url_ok = nil, url_ko = nil, merchant_identifier = nil, product_description = nil, merchant_data = nil)
       amount        ||= 0
       order         ||= 0
       language      ||= language_from_locale
       merchant_url  ||= ''
       url_ok        ||= ''
       url_ko        ||= ''
-      merchant_name ||= ''
-      product_description ||=''
+      merchant_identifier ||= ''
+      product_description ||= ''
+      merchant_data ||= ''
 
       @amount = (amount * 100).to_i.to_s
       #TODO: there should be a validation of the order format. So far we only make it a string of 12 positions
@@ -33,7 +34,8 @@ module Redsys
       @merchant_url = merchant_url
       @url_ok = url_ok
       @url_ko = url_ko
-      @merchant_name = merchant_name
+      @merchant_data = merchant_data
+      @merchant_identifier = merchant_identifier
       @product_description = product_description
       @currency = Rails.configuration.redsys_rails[:merchant_currency]
       @merchant_code = Rails.configuration.redsys_rails[:merchant_code]
@@ -64,9 +66,10 @@ module Redsys
     end
 
     def merchant_params_json
-      merchant_parameters = { 
+      merchant_parameters = {
         :DS_MERCHANT_AMOUNT => @amount,
         :DS_MERCHANT_ORDER => @order,
+        :DS_MERCHANT_MERCHANTDATA => @merchant_data,
         :DS_MERCHANT_MERCHANTCODE => @merchant_code,
         :DS_MERCHANT_CURRENCY => @currency,
         :DS_MERCHANT_TRANSACTIONTYPE => @transaction_type,
@@ -75,7 +78,7 @@ module Redsys
         :DS_MERCHANT_CONSUMERLANGUAGE => @language,
         :DS_MERCHANT_URLOK => @url_ok,
         :DS_MERCHANT_URLKO => @url_ko,
-        :DS_MERCHANT_MERCHANTNAME => @merchant_name,
+        :DS_MERCHANT_IDENTIFIER => @merchant_identifier,
         :DS_MERCHANT_PRODUCTDESCRIPTION => @product_description
       }
       JSON.generate(merchant_parameters)
@@ -108,7 +111,7 @@ module Redsys
       def encrypt_mac256(data, key)
         Base64.strict_encode64(OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), key, data))
       end
-    
+
       def encrypt_3DES(data, key)
         cipher = OpenSSL::Cipher::Cipher.new('DES3')
         cipher.encrypt
