@@ -16,7 +16,7 @@ module Redsys
       Rails.configuration.redsys_rails[:signature_version]
     end
 
-    def initialize(amount, order, language, merchant_url = nil, url_ok = nil, url_ko = nil, merchant_identifier = nil, product_description = nil, merchant_data = nil)
+    def initialize(amount, order, language, merchant_url = nil, url_ok = nil, url_ko = nil, merchant_identifier = nil, product_description = nil, merchant_data = nil, direct_payment = nil)
       amount        ||= 0
       order         ||= 0
       language      ||= language_from_locale
@@ -26,6 +26,7 @@ module Redsys
       merchant_identifier ||= ''
       product_description ||= ''
       merchant_data ||= ''
+      direct_payment ||= false
 
       @amount = (amount * 100).to_i.to_s
       #TODO: there should be a validation of the order format. So far we only make it a string of 12 positions
@@ -36,6 +37,7 @@ module Redsys
       @url_ko = url_ko
       @merchant_data = merchant_data
       @merchant_identifier = merchant_identifier
+      @direct_payment = direct_payment
       @product_description = product_description
       @currency = Rails.configuration.redsys_rails[:merchant_currency]
       @merchant_code = Rails.configuration.redsys_rails[:merchant_code]
@@ -79,7 +81,8 @@ module Redsys
         :DS_MERCHANT_URLOK => @url_ok,
         :DS_MERCHANT_URLKO => @url_ko,
         :DS_MERCHANT_IDENTIFIER => @merchant_identifier,
-        :DS_MERCHANT_PRODUCTDESCRIPTION => @product_description
+        :DS_MERCHANT_PRODUCTDESCRIPTION => @product_description,
+        :DS_MERCHANT_DIRECTPAYMENT => @direct_payment
       }
       JSON.generate(merchant_parameters)
     end
